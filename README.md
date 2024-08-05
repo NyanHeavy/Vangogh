@@ -22,7 +22,7 @@ Also:
 
 Usage
 ----
-Clone the project. Open Davinci/Assets in unity or import the UnityPackage to your existing project
+Clone the project. Open Vangogh/Assets in unity or import the UnityPackage to your existing project
 OR
 Copy Vangogh.cs and past in your project.
 
