@@ -20,7 +20,6 @@ Features
 .GET(Url)
 ```
 ### Custom Headers
-Define the headers you need
 ```csharp
 .SetHeader("Header", "Value")
 ```
