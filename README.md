@@ -4,7 +4,7 @@
 ```csharp
 Vangogh.Instance()
 .GET(Url)
-.useIEnumerator()
+.UseIEnumerator()
 .WithErrorEndAction((error) => { })
 .WithGetResultAction((response) => { })
 .Init();
