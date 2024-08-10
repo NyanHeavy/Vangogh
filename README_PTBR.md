@@ -1,25 +1,26 @@
 # Vangogh
- Simple WebRequest system for **Unity**! [PT-BR](https://github.com/NyanHeavy/Vangogh/blob/main/README_PTBR.md)
+ Sistema de requisições de rede simples para **Unity**
 
 ```csharp
 Vangogh.Instance()
 .GET(Url)
-.UseIEnumerator()
+.useIEnumerator()
 .WithErrorEndAction((error) => { })
 .WithGetResultAction((response) => { })
 .Init();
 ```
 
-Features
+Funcionalidades
 ---
-### Use POST or GET easily
+### Use POST ou GET facilmente
 ```csharp
 .POST(Url)
 ```
 ```csharp
 .GET(Url)
 ```
-### Custom Headers
+### Cabeçalhos Customizados
+Defina cabeçalhos como necessario
 ```csharp
 .SetHeader("Header", "Value")
 ```
@@ -32,7 +33,7 @@ Vangogh.Instance()
 .WithGetResultAction((response) => { })
 .Init();
 ```
-Supports as many headers as you need
+Suporta quantos precisar
 ```csharp
 Vangogh.Instance()
 .GET(Url)
@@ -44,11 +45,7 @@ Vangogh.Instance()
 .WithGetResultAction((response) => { })
 .Init();
 ```
-### Easy debugging
-```csharp
-.SetEnableLog()
-```
-### Request Body
+### Corpo da Requisição
 ```csharp
 .SetBody("value")
 ```
@@ -61,15 +58,15 @@ Vangogh.Instance()
 .WithGetResultAction((response) => { })
 .Init();
 ```
-### Connection Method
+### Metodos de Conexão
 ```csharp
 .UseIEnumerator()
 ```
-or
+ou
 ```csharp
 .UseAsync()
 ```
-⚠ Asynchronous connection method has not yet been implemented ⚠
+⚠ O método de conexão assíncrona ainda não foi implementado ⚠
 ```csharp
 Vangogh.Instance()
 .GET(Url)
@@ -78,12 +75,12 @@ Vangogh.Instance()
 .WithGetResultAction((response) => { })
 .Init();
 ```
-### Reconnection Attempts
-Sets the maximum number of attempts before terminating
+### Tentativas de Reconexão
+Define o número máximo de tentativas antes de encerrar
 ```csharp
 .SetAttempts(int)
 ```
-You can also set the time between attempts
+Você também pode definir o tempo entre as tentativas
 ```csharp
 .SetAttemptsDelay(float)
 ```
@@ -97,49 +94,42 @@ Vangogh.Instance()
 .WithGetResultAction((response) => { })
 .Init();
 ```
-### Control Instances
-Using single instance will terminating existing process with current url
+### Eventos
 ```csharp
-.UseSingleInstance()
-```
-### Actions
-```csharp
-//Called when the process is started
+//Chamado quando o processo é iniciado
 .WithStartAction(() => { })
 
-//Called when the process encounters an error
+//Chamado quando o processo encontra um erro
 .WithErrorAction((error) => { })
 
-//Called when the process encounters an error and finalize
+//Chamado quando o processo encontra um erro e encerra
 .WithErrorEndAction((error) => { })
 
-//Called when the process is done with results
+//Chamado quando o processo é concluido e com a resposta
 .WithGetResultAction((response) => { })
 ```
 
-Also:
-- Supports native GET & POST, PATCH and DELETE in future
-- Custom Headers.
-- Request Body.
+Também:
+- Suporta nativamente os metodos GET e POST, PATCH e DELETE no futuro.
+- Cabeçalhos customizados.
+- Eventos dinâmicos
 
-### Supporting Platforms
-- Standalone Builds ✔
+### Plataformas Suportadas
+- Executável ✔
 - Android ✔
 - iOS (maybe)
 - WebGl ✔
 
-Usage
+Uso
 ----
-Clone the project. Open Vangogh/Assets in unity or import the UnityPackage to your existing project or copy Vangogh.cs and past in your project.
-Add namespace in you script:
-```csharp
-using NyanHeavyStudios.Vangogh;
-```
+Clone o projeto. Abra Vangogh/Assets no Unity ou importe o UnityPackage para seu projeto existente
+ou
+Copie o script Vangogh.cs e cole no seu projeto.
 
-THIRDPARTY
+Creditos
 ----
- ▶ Based on Davinci structure by [Shamsdev](https://github.com/shamsdev/davinci)
+ ▶ Baseado na estrutura de Davinci por [Shamsdev](https://github.com/shamsdev/davinci)
 
-License
+Licença
 ----
-**Vangogh** is available under the **MIT** license. See the LICENSE file for more info.
+**Vangogh** está disponível sob a licença **MIT**. Veja o arquivo LICENSE para mais informações.
