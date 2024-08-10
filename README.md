@@ -1,5 +1,5 @@
 # Vangogh
- Simple Networking request system for **Unity**! [PT-BR](https://github.com/NyanHeavy/Vangogh/blob/main/README_PTBR.md)
+ Simple WebRequest system for **Unity**! [PT-BR](https://github.com/NyanHeavy/Vangogh/blob/main/README_PTBR.md)
 
 ```csharp
 Vangogh.Instance()
@@ -11,6 +11,10 @@ Vangogh.Instance()
 ```
 
 Features
+### Easy debugging
+```csharp
+.SetEnableLog()
+```
 ---
 ### Use POST or GET easily
 ```csharp
@@ -93,6 +97,11 @@ Vangogh.Instance()
 .WithGetResultAction((response) => { })
 .Init();
 ```
+### Control Instances
+Using single instance will terminating existing process with current url
+```csharp
+.UseSingleInstance()
+```
 ### Actions
 ```csharp
 //Called when the process is started
@@ -121,9 +130,11 @@ Also:
 
 Usage
 ----
-Clone the project. Open Vangogh/Assets in unity or import the UnityPackage to your existing project
-OR
-Copy Vangogh.cs and past in your project.
+Clone the project. Open Vangogh/Assets in unity or import the UnityPackage to your existing project or copy Vangogh.cs and past in your project.
+Add namespace in you script:
+```csharp
+using NyanHeavyStudios.Vangogh;
+```
 
 THIRDPARTY
 ----
