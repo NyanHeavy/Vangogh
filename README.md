@@ -11,10 +11,6 @@ Vangogh.Instance()
 ```
 
 Features
-### Easy debugging
-```csharp
-.SetEnableLog()
-```
 ---
 ### Use POST or GET easily
 ```csharp
@@ -47,6 +43,10 @@ Vangogh.Instance()
 .WithErrorEndAction((error) => { })
 .WithGetResultAction((response) => { })
 .Init();
+```
+### Easy debugging
+```csharp
+.SetEnableLog()
 ```
 ### Request Body
 ```csharp
