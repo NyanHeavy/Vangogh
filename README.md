@@ -1,6 +1,8 @@
 # Vangogh
  Simple API WebRequest system for **Unity**!
-The purpose of this repository is to facilitate querying text APIs using unity.
+
+# Goal
+The goal of this repository is to make it easier to query text APIs using Unity.
 
 > 🚧 **Work in progress** 🚧 \
 > Currently, this repository is in development. 
@@ -11,6 +13,7 @@ Vangogh.Instance()
 .WithGetResultAction((response) => { })
 .Init();
 ```
+See example of use: [RequestManager.cs](https://github.com/NyanHeavy/Vangogh/blob/main/Assets/RequestManager.cs)
 
 Features
 ---
@@ -71,7 +74,6 @@ Vangogh.Instance()
 .GET(Url)
 .SetAttempts(3)
 .SetAttemptsDelay(5f)
-.WithErrorEndAction((error) => { })
 .WithGetResultAction((response) => { })
 .Init();
 ```
