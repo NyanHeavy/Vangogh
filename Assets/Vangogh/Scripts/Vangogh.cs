@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -10,8 +9,8 @@ using UnityEngine.Events;
 using UnityEngine.Networking;
 
 /// <summary>
-/// Vangogh - Simple WebRequest system for Unity
-/// v 1.0
+/// Vangogh - Simple API WebRequest system for Unity
+/// v 2.0
 /// Developed by NyanHeavy Studios : https://github.com/NyanHeavy/Vangogh
 /// Based on Davinci structure by Shamsdev : https://github.com/shamsdev/davinci
 /// </summary>
@@ -21,34 +20,27 @@ namespace NyanHeavyStudios.Vangogh
     public class Vangogh : MonoBehaviour
     {
         private bool enableLog = false;
-
         private readonly VangoghResponse result = new();
         [SerializeField] private string url = null;
 
         private UnityAction onStartAction, onSuccessAction, onEndAction;
 
-        private UnityAction<int> onDownloadProgressChange;
-        private UnityAction<string> onErrorAction;
-        private UnityAction<string> onErrorEnd;
+        private UnityAction onErrorAction;
         private UnityAction<VangoghResponse> onGetResult;
 
         private static readonly Dictionary<string, Vangogh> underProcessVangogs = new();
 
         private string uniqueHash;
-        private int progress;
         private int maxRetrys = 0;
         private int currentRetry;
         private float retryDelay = 1f;
 
-        private bool useienumerator;
-        private bool useasync;
         private bool single;
         private string contenttype;
         private string contentbody;
         private ConnectionMethod method;
 
         private readonly List<CustomHeaders> customHeaders = new();
-
 
         /// <summary>
         /// Get instance of vangogh class
@@ -59,7 +51,24 @@ namespace NyanHeavyStudios.Vangogh
         }
 
         /// <summary>
-        /// Set url for GET data download.
+        /// Show or hide logs in console.
+        /// </summary>
+        /// <param name="enablelog">'true' for show logs in console.</param>
+        /// <returns></returns>
+        public Vangogh SetEnableLog()
+        {
+            this.enableLog = true;
+
+            if (enableLog)
+            {
+                SendLog("Logging enabled", LogType.Log);
+            }
+
+            return this;
+        }
+
+        /// <summary>
+        /// Set url for GET method.
         /// </summary>
         /// <param name="url">GET data Url</param>
         /// <returns></returns>
@@ -69,7 +78,7 @@ namespace NyanHeavyStudios.Vangogh
 
             if (enableLog)
             {
-                Debug.Log("[Vangogh] Url set : " + url);
+                SendLog("GET Url set: " + url, LogType.Log);
             }
 
             this.url = url;
@@ -77,7 +86,7 @@ namespace NyanHeavyStudios.Vangogh
         }
 
         /// <summary>
-        /// Set url for POST data upload.
+        /// Set url for POST method.
         /// </summary>
         /// <param name="url">POST data Url</param>
         /// <returns></returns>
@@ -87,59 +96,10 @@ namespace NyanHeavyStudios.Vangogh
 
             if (enableLog)
             {
-                Debug.Log("[Vangogh] Url set : " + url);
+                SendLog("POST Url set: " + url, LogType.Log);
             }
 
             this.url = url;
-            return this;
-        }
-
-        /// <summary>
-        /// Set action to invoke when Vangogh start request process.
-        /// </summary>
-        /// <param name="action">UnityAction function</param>
-        /// <returns></returns>
-        public Vangogh WithStartAction(UnityAction action)
-        {
-            this.onStartAction = action;
-
-            if (enableLog)
-            {
-                Debug.Log("[Vangogh] On start action set : " + action);
-            }
-
-            return this;
-        }
-
-        /// <summary>
-        /// Use IEnumerator method as request system
-        /// </summary>
-        public Vangogh UseIEnumerator()
-        {
-            this.useienumerator = true;
-            this.useasync = false;
-
-            if (enableLog)
-            {
-                Debug.Log("[Vangogh] Using IEnumerator");
-            }
-
-            return this;
-        }
-
-        /// <summary>
-        /// Use Async method as downloader system
-        /// </summary>
-        public Vangogh UseAsync()
-        {
-            this.useasync = true;
-            this.useienumerator = false;
-
-            if (enableLog)
-            {
-                Debug.Log("[Vangogh] Using async");
-            }
-
             return this;
         }
 
@@ -152,7 +112,24 @@ namespace NyanHeavyStudios.Vangogh
 
             if (enableLog)
             {
-                Debug.Log("[Vangogh] Using single instance");
+                SendLog("Using single instance", LogType.Log);
+            }
+
+            return this;
+        }
+
+        /// <summary>
+        /// Set action to invoke when Vangogh start process.
+        /// </summary>
+        /// <param name="action">UnityAction function</param>
+        /// <returns></returns>
+        public Vangogh WithStartAction(UnityAction action)
+        {
+            this.onStartAction = action;
+
+            if (enableLog)
+            {
+                SendLog("On start action set : " + action.ToString(), LogType.Log);
             }
 
             return this;
@@ -169,14 +146,14 @@ namespace NyanHeavyStudios.Vangogh
 
             if (enableLog)
             {
-                Debug.Log("[Vangogh] On success action set : " + action);
+                SendLog("On success action set : " + action.ToString(), LogType.Log);
             }
 
             return this;
         }
 
         /// <summary>
-        /// Set action to invoke when Vangogh end request process.
+        /// Set action to invoke when Vangogh end request process => regardless of the outcome.
         /// </summary>
         /// <param name="action">UnityAction function</param>
         /// <returns></returns>
@@ -186,7 +163,7 @@ namespace NyanHeavyStudios.Vangogh
 
             if (enableLog)
             {
-                Debug.Log("[Vangogh] On end action set : " + action);
+                SendLog("On end action set : " + action.ToString(), LogType.Log);
             }
 
             return this;
@@ -197,47 +174,13 @@ namespace NyanHeavyStudios.Vangogh
         /// </summary>
         /// <param name="action">UnityAction function</param>
         /// <returns></returns>
-        public Vangogh WithErrorAction(UnityAction<string> action)
+        public Vangogh WithErrorAction(UnityAction action)
         {
             this.onErrorAction = action;
 
             if (enableLog)
             {
-                Debug.Log("[Vangogh] On error action set : " + action);
-            }
-
-            return this;
-        }
-
-        /// <summary>
-        /// Set action to invoke when Vangogh get error request and finalize.
-        /// </summary>
-        /// <param name="action">UnityAction function</param>
-        /// <returns></returns>
-        public Vangogh WithErrorEndAction(UnityAction<string> action)
-        {
-            this.onErrorEnd = action;
-
-            if (enableLog)
-            {
-                Debug.Log("[Vangogh] On error end action set : " + action);
-            }
-
-            return this;
-        }
-
-        /// <summary>
-        /// Set action(int) to invoke when Vangogh is downloading request (0-1).
-        /// </summary>
-        /// <param name="action">UnityAction function(int)</param>
-        /// <returns></returns>
-        public Vangogh WithDownloadProgressChangedAction(UnityAction<int> action)
-        {
-            this.onDownloadProgressChange = action;
-
-            if (enableLog)
-            {
-                Debug.Log("[Vangogh] On download progress changed action set : " + action);
+                SendLog("On error action set : " + action.ToString(), LogType.Log);
             }
 
             return this;
@@ -254,7 +197,7 @@ namespace NyanHeavyStudios.Vangogh
 
             if (enableLog)
             {
-                Debug.Log("[Vangogh] On get result action set : " + action);
+                SendLog("On get result action set : " + action.ToString(), LogType.Log);
             }
 
             return this;
@@ -265,13 +208,13 @@ namespace NyanHeavyStudios.Vangogh
         /// </summary>
         /// <param name="retry">Int of attempts</param>
         /// <returns></returns>
-        public Vangogh MaxAttempts(int retry)
+        public Vangogh SetAttempts(int retry)
         {
             this.maxRetrys = retry;
 
             if (enableLog)
             {
-                Debug.Log("[Vangogh] Retry connection set to : " + retry);
+                SendLog("Retry connection set to : " + retry, LogType.Log);
             }
 
             return this;
@@ -288,7 +231,7 @@ namespace NyanHeavyStudios.Vangogh
 
             if (enableLog)
             {
-                Debug.Log("[Vangogh] Attempts delay connection set to : " + delay);
+                SendLog("Attempts delay connection set to : " + delay, LogType.Log);
             }
 
             return this;
@@ -312,7 +255,7 @@ namespace NyanHeavyStudios.Vangogh
 
             if (enableLog)
             {
-                Debug.Log($"[Vangogh] Header set: [{custom.headerType}]:[{custom.headerValue}]");
+                SendLog($"Header set : [{custom.headerType}]:[{custom.headerValue}]", LogType.Log);
             }
 
             return this;
@@ -329,7 +272,7 @@ namespace NyanHeavyStudios.Vangogh
 
             if (enableLog)
             {
-                Debug.Log($"[Vangogh] ContentType set: {type}");
+                SendLog($"ContentType set : {type}", LogType.Log);
             }
 
             return this;
@@ -346,24 +289,7 @@ namespace NyanHeavyStudios.Vangogh
 
             if (enableLog)
             {
-                Debug.Log($"[Vangogh] Content Body set: {contentBody}");
-            }
-
-            return this;
-        }
-
-        /// <summary>
-        /// Show or hide logs in console.
-        /// </summary>
-        /// <param name="enablelog">'true' for show logs in console.</param>
-        /// <returns></returns>
-        public Vangogh SetEnableLog()
-        {
-            this.enableLog = true;
-
-            if (enableLog)
-            {
-                Debug.Log("[Vangogh] Logging enabled : " + enableLog);
+                SendLog($"Content Body set : {contentBody}", LogType.Log);
             }
 
             return this;
@@ -376,13 +302,13 @@ namespace NyanHeavyStudios.Vangogh
         {
             if (url == null)
             {
-                Error("[Vangogh] Url has not been set. Use 'load' funtion to set image url.", true);
+                Error("Url has not been set. Use 'GET' or 'POST' function to set url.");
                 return;
             }
 
             uniqueHash = CreateMD5(url);
 
-            if (url.StartsWith("http://")) //Default project rejects request with non secure url
+            if (url.StartsWith("http://")) //Default unity project rejects request with non secure url.
             {
                 url = url.Replace("http://", "https://");
             }
@@ -394,34 +320,16 @@ namespace NyanHeavyStudios.Vangogh
             }
             catch (Exception ex)
             {
-                Error("[Vangogh] Url is not correct : " + ex, true);
-                return;
-            }
-
-            if (method == ConnectionMethod.get)
-            {
-                if (useasync == false && useienumerator == false)
-                {
-                    Error("[Vangogh] loader type has not been set. Use 'UsingIEnumerator or UsingAsync' function to set loader type.", true);
-                    return;
-                }
-            }
-
-            if (useasync == true && useienumerator == true)
-            {
-                Error("[Vangogh] Two or more loader types has been set. Please use just one.", true);
+                Error("Url is not correct : " + ex);
                 return;
             }
 
             if (enableLog)
             {
-                Debug.Log("[Vangogh] Start Working.");
+                SendLog("Start Process", LogType.Log);
             }
 
-            if (onStartAction != null)
-            {
-                onStartAction?.Invoke();
-            }
+            onStartAction?.Invoke();
 
             if (underProcessVangogs.ContainsKey(uniqueHash))
             {
@@ -458,163 +366,84 @@ namespace NyanHeavyStudios.Vangogh
 
             if (method == ConnectionMethod.get)
             {
-                if (useienumerator)
-                {
-                    StartCoroutine(VangoghGET());
-                }
-                else if (useasync)
-                {
-                    //Request using async methods will be implemented in future
-                }
+                StartCoroutine(VangoghGET());
             }
             else if (method == ConnectionMethod.post)
             {
-                StartCoroutine(VangoghPOST());
+                VangoghPOST();
             }
         }
 
-        private IEnumerator VangoghPOST()
+        private async void VangoghPOST()
         {
-            UnityWebRequest request = new(url, "POST");
-            byte[] bodyRaw = new UTF8Encoding().GetBytes(contentbody);
-            request.uploadHandler = new UploadHandlerRaw(bodyRaw);
-            request.downloadHandler = new DownloadHandlerBuffer();
-
-            if (customHeaders.Count > 0)
+            using (var httpClient = new HttpClient())
             {
-                for (int i = 0; i < customHeaders.Count; i++)
+                try
                 {
-                    request.SetRequestHeader(customHeaders[i].headerType, customHeaders[i].headerValue);
-                }
-            }
-
-            yield return request.SendWebRequest();
-
-            if (request.result == UnityWebRequest.Result.ConnectionError || request.result == UnityWebRequest.Result.ProtocolError)
-            {
-                if (maxRetrys == 0)
-                {
-                    //onErrorAction?.Invoke("[Vangogh] " + www.error);
-                    CheckResponse(request.responseCode, request.error);
-                    //onErrorEnd?.Invoke("[Vangogh] " + www.error);
-                    request.Dispose();
-                    Finish();
-                }
-                else
-                {
-                    if (currentRetry < maxRetrys)
+                    using (var request = new HttpRequestMessage(new HttpMethod("POST"), url))
                     {
-                        currentRetry++;
-                        onErrorAction?.Invoke("[Vangogh] [Attempt " + currentRetry + "/" + maxRetrys + "] " + request.error);
-                        request.Dispose();
-                        StartCoroutine(WaitForRetrys(ConnectionMethod.post));
+                        if (customHeaders.Count > 0)
+                        {
+                            for (int i = 0; i < customHeaders.Count; i++)
+                            {
+                                request.Headers.TryAddWithoutValidation(customHeaders[i].headerType, customHeaders[i].headerValue);
+                            }
+                        }
+
+                        request.Content = new StringContent(contentbody);
+                        request.Content.Headers.ContentType = MediaTypeHeaderValue.Parse(contenttype);
+
+                        var response = await httpClient.SendAsync(request);
+
+                        if (response.IsSuccessStatusCode)
+                        {
+                            result.Code = (long)response.StatusCode;
+
+                            if (response.Content != null)
+                            {
+                                HttpContent content = response.Content;
+                                result.Result = await content.ReadAsStringAsync();
+                            }
+
+                            ReturnHttpResponse();
+                            underProcessVangogs.Remove(uniqueHash);
+                        }
+                        else
+                        {
+                            onErrorAction?.Invoke();
+                            CheckResponse(result.Code, result.Result);
+                        }
+                    }
+                }
+                catch (HttpRequestException exception)
+                {
+                    if (maxRetrys == 0)
+                    {
+                        SendLog($"Error : {exception.Message}", LogType.Error);
+                        Finish();
                     }
                     else
                     {
-                        onErrorAction?.Invoke("[Vangogh] Max retrys reached > " + request.error);
-                        //onErrorEnd?.Invoke("[Vangogh] [MAXRETRYS]");
-                        CheckResponse(request.responseCode, request.error);
-                        request.Dispose();
-                        Finish();
+                        if (currentRetry < maxRetrys)
+                        {
+                            currentRetry++;
+                            onErrorAction?.Invoke();
+                            SendLog($"[Attempt {currentRetry}/{maxRetrys}] {exception.Message}", LogType.Warning);
+                            StartCoroutine(WaitForRetrys(ConnectionMethod.post));
+                        }
+                        else
+                        {
+                            onErrorAction?.Invoke();
+                            SendLog($"Maximum attempts reached : {exception.Message}", LogType.Error);
+                            Finish();
+                        }
                     }
                 }
-            }
-            else if (request.result == UnityWebRequest.Result.Success)
-            {
-                result.Code = request.responseCode;
-                result.Result = request.downloadHandler.text;
-                request.Dispose();
-
-                if (onSuccessAction != null)
+                catch (Exception exception)
                 {
-                    onSuccessAction?.Invoke();
-                }
-
-                ReturnHttpResponse();
-                underProcessVangogs.Remove(uniqueHash);
-            }
-            else
-            {
-                onErrorAction?.Invoke(request.error);
-                onErrorEnd?.Invoke("[UNKNOWRESULT]");
-                request.Dispose();
-                onEndAction?.Invoke();
-            }
-        }
-
-        private async void VangoghAsyncPOST()
-        {
-            Debug.Log("[Vangogh] DownloaderPOST");
-
-            using var httpClient = new HttpClient();
-            try
-            {
-                using var request = new HttpRequestMessage(new HttpMethod("POST"), url);
-                if (customHeaders.Count > 0)
-                {
-                    for (int i = 0; i < customHeaders.Count; i++)
-                    {
-                        request.Headers.TryAddWithoutValidation(customHeaders[i].headerType, customHeaders[i].headerValue);
-                    }
-                }
-
-                request.Content = new StringContent(contentbody);
-                request.Content.Headers.ContentType = MediaTypeHeaderValue.Parse(contenttype);
-
-                var response = await httpClient.SendAsync(request);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    result.Code = (long)response.StatusCode;
-
-                    if (response.Content != null)
-                    {
-                        HttpContent content = response.Content;
-                        result.Result = await content.ReadAsStringAsync();
-                    }
-
-                    ReturnHttpResponse();
-                    Debug.Log("[Vangogh] after return httpresponse");
-                    underProcessVangogs.Remove(uniqueHash);
-                }
-                else
-                {
-                    onErrorAction?.Invoke("[Vangogh] " + response.StatusCode);
-                    onErrorEnd?.Invoke("[Vangogh] " + response.Content);
-                    Debug.Log("[Vangogh] is not success");
+                    SendLog($"Unknow POST error : {exception.Message}", LogType.Error);
                     Finish();
                 }
-            }
-            catch (HttpRequestException ex)
-            {
-                if (maxRetrys == 0)
-                {
-                    onErrorAction?.Invoke(ex.Message);
-                    onErrorEnd?.Invoke(ex.Message);
-                    Debug.Log("[Vangogh] exception");
-                    Finish();
-                }
-                else
-                {
-                    if (currentRetry < maxRetrys)
-                    {
-                        currentRetry++;
-                        onErrorAction?.Invoke("[Vangogh] [Attempt " + currentRetry + "/" + maxRetrys + "] " + ex.Message);
-                        StartCoroutine(WaitForRetrys(ConnectionMethod.post));
-                    }
-                    else
-                    {
-                        onErrorAction?.Invoke("[Vangogh] Max retrys reached > " + ex.Message);
-                        onErrorEnd?.Invoke("[Vangogh] [MAXRETRYS]");
-                        Finish();
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                onErrorEnd?.Invoke("[Vangogh] [POST ERROR]" + ex);
-                Debug.Log("[Vangogh] post exception: " + ex);
-                Finish();
             }
         }
 
@@ -622,7 +451,7 @@ namespace NyanHeavyStudios.Vangogh
         {
             if (enableLog)
             {
-                Debug.Log("[Vangogh] Download started.");
+                SendLog("Request started", LogType.Log);
             }
 
             UnityWebRequest www = UnityWebRequest.Get(url);
@@ -637,45 +466,27 @@ namespace NyanHeavyStudios.Vangogh
 
             yield return www.SendWebRequest();
 
-            while (!www.isDone)
-            {
-                progress = (int)(www.downloadProgress * 100f);
-                onDownloadProgressChange?.Invoke(progress);
-
-                if (enableLog)
-                {
-                    Debug.Log("[Vangogh] Downloading progress : " + progress + "%");
-                }
-
-                yield return null;
-            }
-
             if (www.result == UnityWebRequest.Result.ProtocolError || www.result == UnityWebRequest.Result.ConnectionError)
             {
                 if (maxRetrys == 0)
                 {
-                    //onErrorAction?.Invoke("[Vangogh] " + www.error);
                     CheckResponse(www.responseCode, www.error);
-                    //onErrorEnd?.Invoke("[Vangogh] " + www.error);
                     www.Dispose();
-                    Finish();
                 }
                 else
                 {
                     if (currentRetry < maxRetrys)
                     {
                         currentRetry++;
-                        onErrorAction?.Invoke("[Vangogh] [Attempt " + currentRetry + "/" + maxRetrys + "] " + www.error);
+                        SendLog($"[Attempt {currentRetry}/{maxRetrys}] {www.error}", LogType.Warning);
                         www.Dispose();
                         StartCoroutine(WaitForRetrys(ConnectionMethod.get));
                     }
                     else
                     {
-                        onErrorAction?.Invoke("[Vangogh] Max retrys reached > " + www.error);
-                        //onErrorEnd?.Invoke("[Vangogh] [MAXRETRYS]");
+                        SendLog($"Maximum attempts reached", LogType.Error);
                         CheckResponse(www.responseCode, www.error);
                         www.Dispose();
-                        Finish();
                     }
                 }
             }
@@ -685,19 +496,15 @@ namespace NyanHeavyStudios.Vangogh
                 result.Result = www.downloadHandler.text;
                 www.Dispose();
                 www = null;
-
-                if (onSuccessAction != null)
-                {
-                    onSuccessAction?.Invoke();
-                }
+                onSuccessAction?.Invoke();
 
                 ReturnHttpResponse();
                 underProcessVangogs.Remove(uniqueHash);
             }
             else
             {
-                onErrorAction?.Invoke(www.error);
-                onErrorEnd?.Invoke("[UNKNOWRESULT]");
+                onErrorAction?.Invoke();
+                CheckResponse(www.responseCode, www.error);
                 www.Dispose();
                 onEndAction?.Invoke();
             }
@@ -708,28 +515,28 @@ namespace NyanHeavyStudios.Vangogh
             switch (httpStatusCode)
             {
                 case 400:
-                    onErrorAction?.Invoke($"[Vangogh] [{httpStatusCode}] Bad Request: {error}");
+                    SendLog($"[{httpStatusCode}] Bad Request : {error}", LogType.Error);
                     break;
                 case 401:
-                    onErrorAction?.Invoke($"[Vangogh] [{httpStatusCode}] Unauthorized: {error}");
+                    SendLog($"[{httpStatusCode}] Unauthorized : {error}", LogType.Error);
                     break;
                 case 403:
-                    onErrorAction?.Invoke($"[Vangogh] [{httpStatusCode}] Forbidden: {error}");
+                    SendLog($"[{httpStatusCode}] Forbidden : {error}", LogType.Error);
                     break;
                 case 404:
-                    onErrorAction?.Invoke($"[Vangogh] [{httpStatusCode}] Not Found: {error}");
+                    SendLog($"[{httpStatusCode}] Not Found : {error}", LogType.Error);
                     break;
                 case 429:
-                    onErrorAction?.Invoke($"[Vangogh] [{httpStatusCode}] Too Many Requests: {error}");
+                    SendLog($"[{httpStatusCode}] Too Many Requests : {error}", LogType.Error);
                     break;
                 case 500:
-                    onErrorAction?.Invoke($"[Vangogh] [{httpStatusCode}] Internal Server Error: {error}");
+                    SendLog($"[{httpStatusCode}] Internal Server Error : {error}", LogType.Error);
                     break;
                 case 502:
-                    onErrorAction?.Invoke($"[Vangogh] [{httpStatusCode}] Bad Gateway: {error}");
+                    SendLog($"[{httpStatusCode}] Bad Gateway : {error}", LogType.Error);
                     break;
                 default:
-                    onErrorAction?.Invoke($"[Vangogh] [{httpStatusCode}] Unknow Error: {error}");
+                    SendLog($"[{httpStatusCode}] Unknow Error : {error}", LogType.Error);
                     break;
             }
 
@@ -738,83 +545,38 @@ namespace NyanHeavyStudios.Vangogh
 
         IEnumerator WaitForRetrys(ConnectionMethod method)
         {
+            SendLog($"[Waiting for next Attempt] : {retryDelay}s", LogType.Warning);
             yield return new WaitForSeconds(retryDelay);
 
             if (method == ConnectionMethod.get)
             {
-                if (useienumerator)
-                {
-                    StartCoroutine(VangoghGET());
-                }
-                else if (useasync)
-                {
-                    //Downloading using async methods will be implemented in future
-                }
+                StopAllCoroutines();
+                StartCoroutine(VangoghGET());
             }
             else if (method == ConnectionMethod.post)
             {
-                StartCoroutine(VangoghPOST());
+                StopAllCoroutines();
+                VangoghPOST();
             }
         }
 
-        private void Error(string message, bool critical)
+        private void Error(string message)
         {
             if (enableLog)
             {
-                Debug.LogError("[Vangogh] Error : " + message);
+                SendLog(message, LogType.Error);
             }
 
-            if (onErrorAction != null)
-            {
-                onErrorAction.Invoke(message);
-            }
-            else
-            {
-                onErrorEnd?.Invoke(message);
-                Finish();
-            }
-        }
-
-        private void Finish()
-        {
-            underProcessVangogs.Remove(uniqueHash);
-
-            if (enableLog)
-            {
-                Debug.Log("[Vangogh] Operation has been finished");
-            }
-
-            if (onEndAction != null)
-            {
-                onEndAction?.Invoke();
-            }
-
-            Invoke(nameof(Destroyer), 0.5f);
-        }
-
-        public void Destroyer()
-        {
-            Destroy(gameObject);
+            Finish();
         }
 
         private void ReturnHttpResponse()
         {
-            progress = 100;
-            if (onDownloadProgressChange != null)
-            {
-                onDownloadProgressChange?.Invoke(progress);
-            }
-
-            if (enableLog)
-            {
-                Debug.Log("[Vangogh] Downloading progress : " + progress + "%");
-            }
-
             StopAllCoroutines();
 
             if (enableLog)
             {
-                Debug.Log("[Vangogh] Get resulting!");
+                SendLog("Getting result", LogType.Log);
             }
 
             if (result.Code == 200)
@@ -824,26 +586,70 @@ namespace NyanHeavyStudios.Vangogh
             }
             else
             {
-                onErrorAction?.Invoke("[Vangogh] Wrong reponse code > " + result.Code);
-                onErrorEnd?.Invoke($"[RESPONSE{result.Result}]");
+                onErrorAction?.Invoke();
+                SendLog($"Wrong response code : {result.Code}", LogType.Error);
                 Finish();
             }
         }
 
         public static string CreateMD5(string input)
         {
-            // Use input string to calculate MD5 hash
             using System.Security.Cryptography.MD5 md5 = System.Security.Cryptography.MD5.Create();
             byte[] inputBytes = Encoding.ASCII.GetBytes(input);
             byte[] hashBytes = md5.ComputeHash(inputBytes);
 
-            // Convert the byte array to hexadecimal string
             StringBuilder sb = new();
             for (int i = 0; i < hashBytes.Length; i++)
             {
                 sb.Append(hashBytes[i].ToString("X2"));
             }
             return sb.ToString();
+        }
+
+        private void SendLog(string message, LogType logtype)
+        {
+            string log = "";
+
+            if (Application.isEditor)
+            {
+                log = logtype switch
+                {
+                    LogType.Error => $"<color=red>[Vangogh][Error] {message}</color>",
+                    LogType.Log => $"<color=green>[Vangogh][Debug] {message}</color>",
+                    LogType.Warning => $"<color=yellow>[Vangogh][Warning] {message}</color>",
+                    _ => $"[Vangogh] : {message}",
+                };
+            }
+            else
+            {
+                log = logtype switch
+                {
+                    LogType.Error => $"[Vangogh][Error] {message}",
+                    LogType.Log => $"[Vangogh][Debug] {message}",
+                    LogType.Warning => $"[Vangogh][Warning] {message}",
+                    _ => $"[Vangogh] : {message}",
+                };
+            }
+
+            Debug.Log(log);
+        }
+
+        private void Finish()
+        {
+            underProcessVangogs.Remove(uniqueHash);
+
+            if (enableLog)
+            {
+                SendLog("Operation has been finished", LogType.Log);
+            }
+
+            onEndAction?.Invoke();
+            Invoke(nameof(Destroyer), 0.5f);
+        }
+
+        public void Destroyer()
+        {
+            Destroy(gameObject);
         }
     }
 

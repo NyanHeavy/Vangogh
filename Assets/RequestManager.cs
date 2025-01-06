@@ -14,11 +14,16 @@ public class RequestManager : MonoBehaviour
     {
         Vangogh.Instance()
         .GET("https://catfact.ninja/fact")
-        .UseIEnumerator()
-        .WithStartAction(() => { Debug.Log("Start request..."); })
-        .WithErrorEndAction((error) => { Debug.Log($"Error: {error}"); })
+        .SetAttemptsDelay(2)
+        .SetAttempts(3)
+        .WithStartAction(() => { OnStartProcess(); })
         .WithGetResultAction((response) => { GetResponse(response); })
         .Init();
+    }
+
+    private void OnStartProcess()
+    {
+        Debug.Log("Initiating request...");
     }
 
     private void GetResponse(VangoghResponse response)
