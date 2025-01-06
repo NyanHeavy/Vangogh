@@ -1,6 +1,6 @@
 # Vangogh
  Simple API WebRequest system for **Unity**!
- The purpose of this repository is to facilitate querying text APIs using unity.
+The purpose of this repository is to facilitate querying text APIs using unity.
 
 > 🚧 **Work in progress** 🚧 \
 > Currently, this repository is in development. 
