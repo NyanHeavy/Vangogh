@@ -1,5 +1,6 @@
 # Vangogh
- Simple WebRequest system for **Unity**!
+ Simple API WebRequest system for **Unity**!
+ The purpose of this repository is to facilitate querying text APIs using unity.
 
 > 🚧 **Work in progress** 🚧 \
 > Currently, this repository is in development. 
@@ -7,8 +8,6 @@
 ```csharp
 Vangogh.Instance()
 .GET(Url)
-.UseIEnumerator()
-.WithErrorEndAction((error) => { })
 .WithGetResultAction((response) => { })
 .Init();
 ```
@@ -29,9 +28,7 @@ Features
 ```csharp
 Vangogh.Instance()
 .GET(Url)
-.UseIEnumerator()
 .SetHeader("Authorization", "value")
-.WithErrorEndAction((error) => { })
 .WithGetResultAction((response) => { })
 .Init();
 ```
@@ -39,11 +36,9 @@ Supports as many headers as you need
 ```csharp
 Vangogh.Instance()
 .GET(Url)
-.UseIEnumerator()
 .SetHeader("Authorization", "value")
 .SetHeader("Content-Type", "value")
 .SetHeader("Any-Header-Name", "value")
-.WithErrorEndAction((error) => { })
 .WithGetResultAction((response) => { })
 .Init();
 ```
@@ -58,26 +53,7 @@ Vangogh.Instance()
 ```csharp
 Vangogh.Instance()
 .GET(Url)
-.UseIEnumerator()
 .SetBody("some-value")
-.WithErrorEndAction((error) => { })
-.WithGetResultAction((response) => { })
-.Init();
-```
-### Connection Method
-```csharp
-.UseIEnumerator()
-```
-or
-```csharp
-.UseAsync()
-```
-⚠ Asynchronous connection method has not yet been implemented ⚠
-```csharp
-Vangogh.Instance()
-.GET(Url)
-.useIEnumerator()
-.WithErrorEndAction((error) => { })
 .WithGetResultAction((response) => { })
 .Init();
 ```
@@ -93,7 +69,6 @@ You can also set the time between attempts
 ```csharp
 Vangogh.Instance()
 .GET(Url)
-.useIEnumerator()
 .SetAttempts(3)
 .SetAttemptsDelay(5f)
 .WithErrorEndAction((error) => { })
@@ -111,19 +86,16 @@ Using single instance will terminating existing process with current url
 .WithStartAction(() => { })
 
 //Called when the process encounters an error
-.WithErrorAction((error) => { })
-
-//Called when the process encounters an error and finalize
-.WithErrorEndAction((error) => { })
+.WithErrorAction(() => { })
 
 //Called when the process is done with results
 .WithGetResultAction((response) => { })
 ```
 
 Also:
-- Supports native GET & POST, PATCH and DELETE in future
+- Supports native GET & POST
 - Custom Headers.
-- Request Body.
+- Custom Body.
 
 ### Supporting Platforms
 - Standalone Builds ✔
@@ -133,7 +105,7 @@ Also:
 
 Usage
 ----
-Clone the project. Open Vangogh/Assets in unity or import the UnityPackage to your existing project or copy Vangogh.cs and past in your project.
+Open Vangogh/Assets in unity or import the UnityPackage to your existing project or just copy Vangogh.cs and past in your project.
 Add namespace in you script:
 ```csharp
 using NyanHeavyStudios.Vangogh;
