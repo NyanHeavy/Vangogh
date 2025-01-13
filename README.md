@@ -108,7 +108,7 @@ Also:
 Usage
 ----
 Open Vangogh/Assets in unity or import the UnityPackage to your existing project or just copy Vangogh.cs and past in your project.
-Add namespace in you script:
+Add the namespace to your scripts:
 ```csharp
 using NyanHeavyStudios.Vangogh;
 ```
