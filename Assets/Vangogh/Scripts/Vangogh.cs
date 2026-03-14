@@ -8,7 +8,7 @@ using UnityEngine.Networking;
 
 /// <summary>
 /// Vangogh - Simple API WebRequest system for Unity
-/// v3.0 (Ultra-Lean Syntax Edition)
+/// v3.2 (Ultra-Lean Syntax Edition)
 /// Developed by NyanHeavy Studios : https://github.com/NyanHeavy/Vangogh
 /// Based on Davinci structure by Shamsdev : https://github.com/shamsdev/davinci
 /// </summary>
@@ -20,8 +20,10 @@ namespace NyanHeavyStudios.Vangogh
         private static Vangogh _instance;
         private static readonly Dictionary<string, Coroutine> ActiveRequests = new();
 
-        /// <summary> Gets the unique persistent instance of Vangogh. Creates one if it doesn't exist. </summary>
-        public static Vangogh Instance()
+        #region Shortcut Methods
+        /// <summary> Shortcut to start a GET request immediately. </summary>
+        /// <param name="url">The target URL.</param>
+        public static RequestBuilder GET(string url)
         {
             if (_instance == null)
             {
@@ -29,17 +31,21 @@ namespace NyanHeavyStudios.Vangogh
                 _instance = go.AddComponent<Vangogh>();
                 DontDestroyOnLoad(go);
             }
-            return _instance;
+            return new RequestBuilder(_instance).GET(url);
         }
-
-        #region Shortcut Methods
-        /// <summary> Shortcut to start a GET request immediately. </summary>
-        /// <param name="url">The target URL.</param>
-        public RequestBuilder GET(string url) => new RequestBuilder(this).GET(url);
 
         /// <summary> Shortcut to start a POST request immediately. </summary>
         /// <param name="url">The target URL.</param>
-        public RequestBuilder POST(string url) => new RequestBuilder(this).POST(url);
+        public static RequestBuilder POST(string url)
+        {
+            if (_instance == null)
+            {
+                GameObject go = new("Vangogh");
+                _instance = go.AddComponent<Vangogh>();
+                DontDestroyOnLoad(go);
+            }
+            return new RequestBuilder(_instance).POST(url);
+        }
         #endregion
 
         /// <summary> Starts a new request configuration builder manually. </summary>
