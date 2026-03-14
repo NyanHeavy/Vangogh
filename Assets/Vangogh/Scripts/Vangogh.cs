@@ -172,7 +172,7 @@ namespace NyanHeavyStudios.Vangogh
 
                     if (www.result == UnityWebRequest.Result.Success)
                     {
-                        var res = new VangoghResponse { Code = www.responseCode, Result = www.downloadHandler.text };
+                        var res = new VangoghResponse { code = www.responseCode, result = www.downloadHandler.text };
                         _onSuccess?.Invoke();
                         _onResult?.Invoke(res);
                         completed = true;
@@ -195,7 +195,7 @@ namespace NyanHeavyStudios.Vangogh
         }
     }
 
-    [Serializable] public class VangoghResponse { public long Code; public string Result; }
+    [Serializable] public class VangoghResponse { public long code; public string result; }
     [Serializable] public class CustomHeaders { public string headerType; public string headerValue; }
     public enum ConnectionMethod { get, post, patch, delete }
 }
