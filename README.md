@@ -1,122 +1,155 @@
-# Vangogh
- Simple API WebRequest system for **Unity**!
+# Vangogh - Simple WebRequest System for Unity
 
-# Goal
-The goal of this repository is to make it easier to query text APIs using Unity.
+**Vangogh** is a lightweight and fluent HTTP request helper for Unity built on top of `UnityWebRequest`.  
+It focuses on **minimal syntax**, **chainable configuration**, and **simple async workflows** using coroutines.
 
-> 🚧 **Work in progress** 🚧 \
-> Currently, this repository is in development. 
+Project by **NyanHeavy Studios**  
+Inspired by **Davinci** by Shamsdev.
 
-```csharp
-Vangogh.Instance()
-.GET(Url)
-.WithGetResultAction((response) => { })
-.Init();
-```
-See example of use: [RequestManager.cs](https://github.com/NyanHeavy/Vangogh/blob/main/Assets/RequestManager.cs)
+## Features
 
-Features
----
-### Use POST or GET easily
-```csharp
-.POST(Url)
-```
-```csharp
-.GET(Url)
-```
-### Custom Headers
-```csharp
-.SetHeader("Header", "Value")
-```
-```csharp
-Vangogh.Instance()
-.GET(Url)
-.SetHeader("Authorization", "value")
-.WithGetResultAction((response) => { })
-.Init();
-```
-Supports as many headers as you need
-```csharp
-Vangogh.Instance()
-.GET(Url)
-.SetHeader("Authorization", "value")
-.SetHeader("Content-Type", "value")
-.SetHeader("Any-Header-Name", "value")
-.WithGetResultAction((response) => { })
-.Init();
-```
-### Easy debugging
-```csharp
-.SetEnableLog()
-```
-### Request Body
-```csharp
-.SetBody("value")
-```
-```csharp
-Vangogh.Instance()
-.GET(Url)
-.SetBody("some-value")
-.WithGetResultAction((response) => { })
-.Init();
-```
-### Reconnection Attempts
-Sets the maximum number of attempts before terminating
-```csharp
-.SetAttempts(int)
-```
-You can also set the time between attempts
-```csharp
-.SetAttemptsDelay(float)
-```
-```csharp
-Vangogh.Instance()
-.GET(Url)
-.SetAttempts(3)
-.SetAttemptsDelay(5f)
-.WithGetResultAction((response) => { })
-.Init();
-```
-### Control Instances
-Using single instance will terminating existing process with current url
-```csharp
-.UseSingleInstance()
-```
-### Actions
-```csharp
-//Called when the process is started
-.WithStartAction(() => { })
+- Simple **fluent builder syntax**
+- Built on Unity's native `UnityWebRequest`
+- **GET / POST** support
+- **Custom headers**
+- **Automatic retry system**
+- **Single-instance request protection**
+- Optional **logging**
+- **Callback-based results**
+- **Coroutine-based async execution**
+- **No external dependencies**
 
-//Called when the process encounters an error
-.WithErrorAction(() => { })
+## Installation
 
-//Called when the process is done with results
-.WithGetResultAction((response) => { })
+1. Copy `Vangogh.cs` into your Unity project (recommended folder):
+
+```
+Assets/
+  Scripts/
+    Vangogh/
+      Vangogh.cs
 ```
 
-Also:
-- Supports native GET & POST
-- Custom Headers.
-- Custom Body.
+2. Unity will compile automatically.
 
-### Supporting Platforms
-- Standalone Builds ✔
-- Android ✔
-- iOS (maybe)
-- WebGl ✔
+No additional setup is required.
 
-Usage
-----
-Open Vangogh/Assets in unity or import the UnityPackage to your existing project or just copy Vangogh.cs and past in your project.
-Add the namespace to your scripts:
+## Basic Usage
+
+### Simple GET
+
 ```csharp
 using NyanHeavyStudios.Vangogh;
+
+Vangogh.GET("https://api.example.com/data")
+    .OnResult(res =>
+    {
+        Debug.Log(res.result);
+    })
+    .Init();
 ```
 
-THIRDPARTY
-----
- ▶ Based on Davinci structure by [Shamsdev](https://github.com/shamsdev/davinci)
+### Simple POST
 
-License
+```csharp
+Vangogh.POST("https://api.example.com/login")
+    .SetBody("{\"user\":\"admin\",\"password\":\"123\"}")
+    .OnResult(res =>
+    {
+        Debug.Log(res.result);
+    })
+    .Init();
+```
+
+## Full Example
+
+```csharp
+Vangogh.POST("https://api.example.com/data")
+    .SetBody("{\"value\":10}")
+    .SetContentType("application/json")
+    .AddHeader("Authorization", "Bearer TOKEN")
+    .SetAttempts(3, 1f)
+    .SetLog(true)
+    .UseSingleInstance()
+    .OnStart(() => Debug.Log("Request started"))
+    .OnSuccess(() => Debug.Log("Success"))
+    .OnError(() => Debug.Log("Error"))
+    .OnEnd(() => Debug.Log("Finished"))
+    .OnResult(res =>
+    {
+        Debug.Log(res.code);
+        Debug.Log(res.result);
+    })
+    .Init();
+```
+
+## API Overview
+
+### Request Creation
+
+```csharp
+Vangogh.GET(url)
+Vangogh.POST(url)
+```
+
+### Configuration
+
+| Method | Description |
+|------|-------------|
+| `SetBody(string)` | Defines request body |
+| `SetContentType(string)` | Sets Content-Type header |
+| `AddHeader(key,value)` | Adds custom header |
+| `SetAttempts(count, delay)` | Retry system |
+| `UseSingleInstance()` | Prevent duplicate calls |
+| `SetLog(bool)` | Enable logging |
+
+### Events
+
+| Event | Description |
+|------|-------------|
+| `OnStart()` | Called when request begins |
+| `OnSuccess()` | Called on HTTP success |
+| `OnError()` | Called when request fails |
+| `OnEnd()` | Always called at end |
+| `OnResult()` | Returns response data |
+
+### Response Object
+
+```csharp
+public class VangoghResponse
+{
+    public long code;
+    public string result;
+}
+```
+
+## Example Response Handling
+
+```csharp
+.OnResult(res =>
+{
+    if(res.code == 200)
+        Debug.Log(res.result);
+})
+```
+
+## Notes
+
+- `UseSingleInstance()` cancels previous active requests with the same URL.
+- `SetAttempts()` retries on connection failure.
+- All requests run internally via a persistent `DontDestroyOnLoad` manager.
+
+## Supporting Platforms
+- Standalone Builds ✔
+- Android ✔
+- iOS (Why not?)
+- WebGl ✔
+
+## Credits
+
+Vangogh structure based on:
+- [Davinci Image Downloader](https://github.com/shamsdev/davinci) by ShamsDev
+
 ----
+## License
 **Vangogh** is available under the **MIT** license. See the LICENSE file for more info.
