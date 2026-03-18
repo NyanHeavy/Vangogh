@@ -12,12 +12,11 @@ public class RequestManager : MonoBehaviour
 
     private void MakeRequest()
     {
-        Vangogh.Instance()
+        Vangogh
         .GET("https://catfact.ninja/fact")
-        .SetAttemptsDelay(2)
-        .SetAttempts(3)
-        .WithStartAction(() => { OnStartProcess(); })
-        .WithGetResultAction((response) => { GetResponse(response); })
+        .SetAttempts(3, 1f)
+        .OnStart(() => { OnStartProcess(); })
+        .OnResult((res) => { GetResponse(res); })
         .Init();
     }
 
@@ -28,6 +27,6 @@ public class RequestManager : MonoBehaviour
 
     private void GetResponse(VangoghResponse response)
     {
-        Debug.Log($"Response Code: {response.Code} | Result: {response.Result}");
+        Debug.Log($"Response Code: {response.code} | Result: {response.result}");
     }
 }
