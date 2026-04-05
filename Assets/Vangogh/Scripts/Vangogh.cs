@@ -8,7 +8,7 @@ using UnityEngine.Networking;
 
 /// <summary>
 /// Vangogh - Simple API WebRequest system for Unity
-/// v3.2 (Ultra-Lean Syntax Edition)
+/// v3.3 (Ultra-Lean Syntax Edition)
 /// Developed by NyanHeavy Studios : https://github.com/NyanHeavy/Vangogh
 /// Based on Davinci structure by Shamsdev : https://github.com/shamsdev/davinci
 /// </summary>
@@ -82,6 +82,8 @@ namespace NyanHeavyStudios.Vangogh
             private string _url;
             private ConnectionMethod _method;
             private string _body;
+            private WWWForm _form;
+            private bool _isJson = false;
             private string _contentType = "application/json";
             private bool _logEnabled;
             private bool _singleInstance;
@@ -101,8 +103,15 @@ namespace NyanHeavyStudios.Vangogh
             /// <summary> Sets the request method to POST and defines the target URL. </summary>
             public RequestBuilder POST(string url) { _url = url; _method = ConnectionMethod.post; return this; }
 
-            /// <summary> Sets the raw string body for the request (usually JSON). </summary>
-            public RequestBuilder SetBody(string body) { _body = body; return this; }
+            /// <summary> Sets the form body for the request (WWWForm). </summary>
+            public RequestBuilder SetBody(WWWForm form) { _form = form; _isJson = false; return this; }
+
+            /// <summary> Sets the json body for request </summary>
+            public RequestBuilder SetJsonBody(string json) { _body = json; _isJson = true; _contentType = "application/json"; return this; }
+
+            /// <summary> Simple set for pure string body </summary>
+            /// <param name="raw"> string </param> <param name="contentType"> request content type </param> <returns></returns>
+            public RequestBuilder SetRawBody(string raw, string contentType) { _body = raw; _isJson = true; _contentType = contentType; return this; }
 
             /// <summary> Sets the Content-Type header. Default is "application/json". </summary>
             public RequestBuilder SetContentType(string type) { _contentType = type; return this; }
@@ -161,13 +170,32 @@ namespace NyanHeavyStudios.Vangogh
 
                 while (currentRetry <= _retries && !completed)
                 {
-                    using UnityWebRequest www = (_method == ConnectionMethod.get)
-                        ? UnityWebRequest.Get(_url)
-                        : UnityWebRequest.PostWwwForm(_url, _body);
+                    UnityWebRequest www = new();
 
-                    if (_method == ConnectionMethod.post) www.SetRequestHeader("Content-Type", _contentType);
+                    if (_method == ConnectionMethod.get)
+                    {
+                        www = UnityWebRequest.Get(_url);
+                    }
+                    else
+                    {
+                        if (_isJson)
+                        {
+                            byte[] bodyRaw = Encoding.UTF8.GetBytes(_body ?? "");
+                            www = new UnityWebRequest(_url, "POST")
+                            {
+                                uploadHandler = new UploadHandlerRaw(bodyRaw),
+                                downloadHandler = new DownloadHandlerBuffer()
+                            };
+
+                            www.SetRequestHeader("Content-Type", _contentType);
+                        }
+                        else
+                        {
+                            www = UnityWebRequest.Post(_url, _form);
+                        }
+                    }
+
                     foreach (var h in _localHeaders) www.SetRequestHeader(h.headerType, h.headerValue);
-
                     yield return www.SendWebRequest();
 
                     if (www.result == UnityWebRequest.Result.Success)
